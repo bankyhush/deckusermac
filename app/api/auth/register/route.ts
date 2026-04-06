@@ -1,5 +1,6 @@
 // api/auth/register
 import prisma from "@/connection/db";
+import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
 
 interface RegisterType {
@@ -33,13 +34,15 @@ export async function POST(req: Request) {
       );
     }
 
+    const hashedpass = await bcrypt.hash(password, 10);
+
     // save data
 
     const newUser = await prisma.user.create({
       data: {
         email,
         name,
-        password,
+        password: hashedpass,
       },
     });
 

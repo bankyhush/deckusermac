@@ -21,6 +21,14 @@ export async function POST(req: Request) {
   }
 
   try {
+    const verifyUser = await prisma.user.findUnique({ where: { id: userId } });
+    if (!verifyUser) {
+      return NextResponse.json(
+        { success: false, message: "Invalid User" },
+        { status: 404 },
+      );
+    }
+
     const newBlog = await prisma.blog.create({
       data: {
         userId,
