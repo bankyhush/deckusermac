@@ -7,6 +7,8 @@ interface BlogType {
   userId: number;
   title: string;
   content: string;
+  author: string;
+  published: boolean;
 }
 
 export async function POST(req: Request) {
@@ -19,9 +21,9 @@ export async function POST(req: Request) {
 
   const body = await req.json();
 
-  const { userId, title, content } = body as BlogType;
+  const { title, content, published } = body as BlogType;
 
-  if (!userId || !title || !content) {
+  if (!title || !content) {
     return NextResponse.json(
       { success: false, message: "All fields are required" },
       { status: 400 },
@@ -29,7 +31,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    const verifyUser = await prisma.user.findUnique({ where: { id: userId } });
+    const verifyUser = await prisma.user.findUnique({ where: { id: auth.id } });
     if (!verifyUser) {
       return NextResponse.json(
         { success: false, message: "Invalid User" },
@@ -39,9 +41,16 @@ export async function POST(req: Request) {
 
     const newBlog = await prisma.blog.create({
       data: {
-        userId,
+        userId: verifyUser.id,
         title,
         content,
+        author: verifyUser.name,
+        published,
+      },
+      include: {
+        user: {
+          select: { name: true, email: true },
+        },
       },
     });
 
