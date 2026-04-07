@@ -1,17 +1,29 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useMe } from "@/hooks/useMe";
 
 export default function ProfileLogic() {
-  const router = useRouter();
+  const { data: user } = useMe();
 
-  const [name, setName] = useState("Ada Okafor");
-  const [email, setEmail] = useState("ada@example.com");
+  const router = useRouter();
+  const queryClient = useQueryClient();
+
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const [bio, setBio] = useState("");
+
+  // pre-fill form with real data once loaded
+  useEffect(() => {
+    if (user) {
+      setName(user.name);
+      setEmail(user.email);
+    }
+  }, [user]);
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -71,6 +83,7 @@ export default function ProfileLogic() {
 
   const handleLogout = async () => {
     await axios.post("/api/auth/logout");
+    queryClient.clear();
     router.push("/login");
   };
 

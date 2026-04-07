@@ -99,7 +99,12 @@ export default function DashboardLogic() {
             </Link>
             <Link href="/profile">
               <div className="w-9 h-9 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-sm font-medium text-blue-700 dark:text-blue-300 cursor-pointer hover:opacity-80 transition">
-                {user?.name?.slice(0, 2) || ""}
+                {user?.name
+                  .split(" ")
+                  .map((n) => n[0])
+                  .join("")
+                  .toUpperCase()
+                  .slice(0, 2)}
               </div>
             </Link>
             <button
