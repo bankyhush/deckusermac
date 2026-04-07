@@ -1,5 +1,6 @@
 // api/auth/createBlog
 import prisma from "@/connection/db";
+import { getAuth } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
 interface BlogType {
@@ -9,6 +10,13 @@ interface BlogType {
 }
 
 export async function POST(req: Request) {
+  const auth = await getAuth();
+  if (!auth)
+    return NextResponse.json(
+      { success: false, message: "Unauthorized User" },
+      { status: 401 },
+    );
+
   const body = await req.json();
 
   const { userId, title, content } = body as BlogType;

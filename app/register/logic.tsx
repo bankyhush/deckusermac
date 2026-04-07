@@ -6,31 +6,40 @@ import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
-export default function LoginLogic() {
+export default function RegisterLogic() {
   const router = useRouter();
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
 
-  const loginMutation = useMutation({
-    mutationFn: async (creds: { email: string; password: string }) => {
-      const res = await axios.post("/api/auth/login", creds);
+  const registerMutation = useMutation({
+    mutationFn: async (data: {
+      name: string;
+      email: string;
+      password: string;
+    }) => {
+      const res = await axios.post("/api/auth/register", data);
       return res.data;
     },
     onSuccess: () => router.push("/dashboard"),
     onError: (error: any) =>
-      alert(error.response?.data?.message || "Login failed"),
+      alert(error.response?.data?.message || "Registration failed"),
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) return alert("Fill all fields");
-    loginMutation.mutate({ email, password });
+    if (!name || !email || !password || !confirm)
+      return alert("Fill all fields");
+    if (password !== confirm) return alert("Passwords do not match");
+    if (password.length < 8)
+      return alert("Password must be at least 8 characters");
+    registerMutation.mutate({ name, email, password });
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-zinc-950 p-4">
       <div className="w-full max-w-md">
-        {/* Logo */}
         <div className="w-10 h-10 bg-zinc-900 dark:bg-white rounded-xl flex items-center justify-center mb-6">
           <svg
             className="w-5 h-5 stroke-white dark:stroke-zinc-900 fill-none stroke-2"
@@ -45,13 +54,27 @@ export default function LoginLogic() {
         </div>
 
         <h1 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-1">
-          Welcome back
+          Create an account
         </h1>
         <p className="text-sm text-zinc-500 mb-8">
-          Sign in to your account to continue
+          Get started — it only takes a minute
         </p>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">
+              Full name
+            </label>
+            <input
+              type="text"
+              placeholder="Ada Okafor"
+              required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="px-3 py-2.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-white"
+            />
+          </div>
+
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">
               Email address
@@ -66,39 +89,61 @@ export default function LoginLogic() {
             />
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <div className="flex justify-between items-center">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex flex-col gap-1.5">
               <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">
                 Password
               </label>
-              <span className="text-xs text-zinc-400 hover:text-zinc-600 cursor-pointer">
-                Forgot password?
-              </span>
+              <input
+                type="password"
+                placeholder="Min. 8 chars"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="px-3 py-2.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-white"
+              />
             </div>
-            <input
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="px-3 py-2.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-white"
-            />
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-medium text-zinc-500 uppercase tracking-wide">
+                Confirm
+              </label>
+              <input
+                type="password"
+                placeholder="••••••••"
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
+                className="px-3 py-2.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-white"
+              />
+            </div>
           </div>
+
+          {/* password match indicator */}
+          {confirm && (
+            <p
+              className={`text-xs ${password === confirm ? "text-green-500" : "text-red-500"}`}
+            >
+              {password === confirm
+                ? "Passwords match"
+                : "Passwords do not match"}
+            </p>
+          )}
 
           <button
             type="submit"
-            disabled={loginMutation.isPending}
+            disabled={registerMutation.isPending}
             className={`cursor-pointer w-full py-2.5 rounded-lg text-sm font-medium text-white transition ${
-              loginMutation.isPending
+              registerMutation.isPending
                 ? "bg-zinc-400 cursor-not-allowed"
                 : "bg-zinc-900 hover:bg-zinc-700 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200"
             }`}
           >
-            {loginMutation.isPending ? "Signing in..." : "Sign in"}
+            {registerMutation.isPending
+              ? "Creating account..."
+              : "Create account"}
           </button>
 
-          {loginMutation.isError && (
+          {registerMutation.isError && (
             <p className="text-red-500 text-sm text-center">
-              {(loginMutation.error as any)?.response?.data?.message ||
+              {(registerMutation.error as any)?.response?.data?.message ||
                 "An error occurred"}
             </p>
           )}
@@ -133,12 +178,12 @@ export default function LoginLogic() {
         </button>
 
         <p className="text-center text-sm text-zinc-500 mt-6">
-          Don't have an account?{" "}
+          Already have an account?{" "}
           <Link
-            href="/register"
+            href="/login"
             className="text-zinc-900 dark:text-white font-medium hover:underline"
           >
-            Sign up
+            Sign in
           </Link>
         </p>
       </div>

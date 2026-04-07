@@ -42,7 +42,7 @@ export async function POST(req: Request) {
       { status: 200 },
     );
 
-    return setTokenCookies(response, accessToken, refreshToken); // ✅ set both cookies
+    return setTokenCookies(response, accessToken, refreshToken);
   } catch (error) {
     console.error(error);
     return NextResponse.json(
