@@ -50,12 +50,6 @@ export default function DashboardLogic() {
     }
   };
 
-  const handleLogout = async () => {
-    await axios.post("/api/auth/logout");
-    queryClient.clear();
-    router.push("/login");
-  };
-
   const published = data?.filter((p) => p.published).length ?? 0;
   const drafts = data?.filter((p) => !p.published).length ?? 0;
 
@@ -112,12 +106,6 @@ export default function DashboardLogic() {
                   .slice(0, 2)}
               </div>
             </Link>
-            <button
-              onClick={handleLogout}
-              className="cursor-pointer px-3 py-2 text-sm text-zinc-500 hover:text-zinc-800 dark:hover:text-white border border-zinc-200 dark:border-zinc-700 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition"
-            >
-              Logout
-            </button>
           </div>
         </div>
 

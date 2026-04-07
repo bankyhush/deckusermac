@@ -108,7 +108,7 @@ export default function ProfileLogic() {
           </Link>
           <button
             onClick={handleLogout}
-            className="text-sm text-zinc-400 hover:text-red-500 transition"
+            className="cursor-pointer px-3 py-2 text-sm text-zinc-500 hover:text-zinc-800 dark:hover:text-white border border-zinc-200 dark:border-zinc-700 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition"
           >
             Logout
           </button>
