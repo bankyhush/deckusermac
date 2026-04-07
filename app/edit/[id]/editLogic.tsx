@@ -1,49 +1,83 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 
-export default function NewPostLogic() {
+interface Blog {
+  id: number;
+  title: string;
+  content: string;
+  published: boolean;
+}
+
+export default function EditPostLogic() {
   const router = useRouter();
+  const { id } = useParams();
   const queryClient = useQueryClient();
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [published, setPublished] = useState(false);
 
-  const createPostMutation = useMutation({
-    mutationFn: async (post: {
+  // fetch existing blog to pre-fill form
+  const { data: blog, isPending: isFetching } = useQuery<Blog>({
+    queryKey: ["blog", id],
+    queryFn: async () => {
+      const res = await axios.get(`/api/blog/${id}`);
+      return res.data.data;
+    },
+    staleTime: 0,
+  });
+
+  // ✅ pre-fill form once data loads
+  useEffect(() => {
+    if (blog) {
+      setTitle(blog.title);
+      setContent(blog.content);
+      setPublished(blog.published);
+    }
+  }, [blog]);
+
+  const editPostMutation = useMutation({
+    mutationFn: async (updated: {
       title: string;
       content: string;
       published: boolean;
     }) => {
-      const res = await axios.post("/api/blog/createBlog", post);
+      const res = await axios.put(`/api/blog/${id}`, updated);
       return res.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["posts"] }); // ✅ refresh dashboard list
+      queryClient.invalidateQueries({ queryKey: ["posts"] }); // refresh dashboard list
+      queryClient.invalidateQueries({ queryKey: ["blog", id] }); // refresh this blog cache
       router.push("/dashboard");
     },
     onError: (error: any) =>
-      alert(error.response?.data?.message || "Failed to create post"),
+      alert(error.response?.data?.message || "Failed to update post"),
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title || !content) return alert("Fill all fields");
-    createPostMutation.mutate({ title, content, published });
+    editPostMutation.mutate({ title, content, published });
   };
 
   const inputClass =
     "px-3 py-2.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-white w-full";
 
+  if (isFetching)
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-zinc-950">
+        <span className="text-zinc-400 text-sm">Loading post...</span>
+      </div>
+    );
+
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 p-6">
       <div className="max-w-2xl mx-auto">
-        {/* Back */}
         <Link
           href="/dashboard"
           className="text-sm text-zinc-400 hover:text-zinc-700 dark:hover:text-white transition mb-6 inline-block"
@@ -53,10 +87,10 @@ export default function NewPostLogic() {
 
         <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl p-6">
           <h1 className="text-xl font-semibold text-zinc-900 dark:text-white mb-1">
-            Create new post
+            Edit post
           </h1>
           <p className="text-sm text-zinc-400 mb-6">
-            Fill in the details below to publish or save as draft
+            Update your post details below
           </p>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-5">
@@ -95,10 +129,10 @@ export default function NewPostLogic() {
             <div className="flex items-center justify-between p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg border border-zinc-200 dark:border-zinc-700">
               <div>
                 <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                  Publish immediately
+                  Published
                 </p>
                 <p className="text-xs text-zinc-400 mt-0.5">
-                  Turn off to save as draft
+                  Turn off to revert to draft
                 </p>
               </div>
               <button
@@ -133,9 +167,9 @@ export default function NewPostLogic() {
             </div>
 
             {/* Error */}
-            {createPostMutation.isError && (
+            {editPostMutation.isError && (
               <p className="text-red-500 text-sm">
-                {(createPostMutation.error as any)?.response?.data?.message ||
+                {(editPostMutation.error as any)?.response?.data?.message ||
                   "An error occurred"}
               </p>
             )}
@@ -144,24 +178,24 @@ export default function NewPostLogic() {
             <div className="flex gap-3 pt-2">
               <button
                 type="submit"
-                disabled={createPostMutation.isPending}
-                className={`cursor-pointer flex-1 py-2.5 rounded-lg text-sm font-medium text-white transition ${
-                  createPostMutation.isPending
+                disabled={editPostMutation.isPending}
+                className={`flex-1 py-2.5 rounded-lg text-sm font-medium text-white transition ${
+                  editPostMutation.isPending
                     ? "bg-zinc-400 cursor-not-allowed"
                     : "bg-zinc-900 hover:bg-zinc-700 dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-200"
                 }`}
               >
-                {createPostMutation.isPending
-                  ? "Creating..."
+                {editPostMutation.isPending
+                  ? "Saving..."
                   : published
-                    ? "Publish post"
+                    ? "Save & publish"
                     : "Save as draft"}
               </button>
 
               <Link href="/dashboard" className="flex-1">
                 <button
                   type="button"
-                  className="cursor-pointer w-full py-2.5 rounded-lg text-sm border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition"
+                  className="w-full py-2.5 rounded-lg text-sm border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition"
                 >
                   Cancel
                 </button>

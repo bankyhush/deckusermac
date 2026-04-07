@@ -12,7 +12,12 @@ export async function GET() {
 
   try {
     const viewBlog = await prisma.blog.findMany({
-      where: { userId: auth.id },
+      orderBy: { createdAt: "desc" },
+      include: {
+        user: {
+          select: { name: true, email: true },
+        },
+      },
     });
     return NextResponse.json(
       { success: true, message: "Blog retrived successfully", data: viewBlog },

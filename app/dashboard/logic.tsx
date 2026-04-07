@@ -32,7 +32,7 @@ export default function DashboardLogic() {
 
   const deletePostMutation = useMutation({
     mutationFn: async (id: number) => {
-      await axios.delete(`/api/blog/${id}`);
+      await axios.delete(`/api/blog/${id}/delete`);
     },
     onSuccess: (_, deletedId) => {
       queryClient.setQueryData<BlogPost[]>(["posts"], (old) =>
@@ -92,8 +92,13 @@ export default function DashboardLogic() {
             </p>
           </div>
           <div className="flex items-center gap-3">
+            <Link href="/feeds">
+              <button className="cursor-pointer flex items-center gap-2 px-4 py-2 bg-zinc-900 dark:bg-green-600 text-white dark:text-white rounded-lg text-sm font-sans hover:opacity-80 transition">
+                Fresh Feeds :)
+              </button>
+            </Link>
             <Link href="/new">
-              <button className="flex items-center gap-2 px-4 py-2 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-lg text-sm font-medium hover:opacity-80 transition">
+              <button className="cursor-pointer flex items-center gap-2 px-4 py-2 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-lg text-sm font-medium hover:opacity-80 transition">
                 + New post
               </button>
             </Link>

@@ -3,7 +3,7 @@ import { Providers } from "../providers/providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Stats Dash",
+  title: "Blog Stats Dash",
 };
 
 export default function RootLayout({
