@@ -41,7 +41,10 @@ export default function ProfileLogic() {
       const res = await axios.put("/api/auth/profile", data);
       return res.data;
     },
-    onSuccess: () => alert("Profile updated!"),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["me"] });
+      alert("Profile updated!");
+    },
     onError: (error: any) =>
       alert(error.response?.data?.message || "Update failed"),
   });
@@ -76,8 +79,8 @@ export default function ProfileLogic() {
     if (!currentPassword || !newPassword || !confirmPassword)
       return alert("Fill all fields");
     if (newPassword !== confirmPassword) return alert("Passwords do not match");
-    if (newPassword.length < 8)
-      return alert("Password must be at least 8 characters");
+    if (newPassword.length < 3)
+      return alert("Password must be at least 3 characters");
     changePasswordMutation.mutate({ currentPassword, newPassword });
   };
 
